@@ -4,7 +4,7 @@ import  math
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, QToolBar, QAction, QFileDialog, QPushButton, QDialog, QSlider
 from PyQt5.QtGui import QPixmap
-import cv2
+import cv2    #ödev1 de eşikleme işleminde kullanılmıştır.
 import matplotlib.pyplot as plt
 import tkinter as tk
 from tkinter import filedialog
