@@ -1,6 +1,5 @@
 import sys
 import  math
-
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, QToolBar, QAction, QFileDialog, QPushButton, QDialog, QSlider
 from PyQt5.QtGui import QPixmap
@@ -500,9 +499,13 @@ class ContrastEnhancement:
         self.image_label = tk.Label(self.app)
         self.image_label.pack()
 
-        self.standart_button = tk.Button(self.app, text="Standart Sigmoid", command=self.enhance_contrast,
+        self.standart_button = tk.Button(self.app, text="Standart Sigmoid", command=self.standart_enhance_contrast,
                                         state=tk.DISABLED)
         self.standart_button.pack(pady=10)
+
+        self.yatay_button = tk.Button(self.app, text="Yatay Kaydırılmış Sigmoid", command=self.yatay_enhance_contrast,
+                                         state=tk.DISABLED)
+        self.yatay_button.pack(pady=10)
 
         # Uygulamayı başlat
         self.app.mainloop()
@@ -519,9 +522,11 @@ class ContrastEnhancement:
 
             #Butonları aktif hale getir
             self.standart_button.config(state=tk.NORMAL)
+            self.yatay_button.config(state=tk.NORMAL)
 
 
-    def enhance_contrast(self):
+
+    def standart_enhance_contrast(self):
         # Standart Sigmoid Fonksiyonu tanımı
         def sigmoid(x):
             return 1 / (1 + np.exp(-x))
@@ -561,6 +566,40 @@ class ContrastEnhancement:
 
         plt.show()
 
+    def yatay_enhance_contrast(self):
+        def s_curve(pixel_val, a=1, b=0.5):
+            return 1 / (1 + np.exp(-a * (pixel_val / 255 - b)))
+
+        def contrast_enhancement(image_path, a=1, b=0.5):
+            # Görüntüyü yükle
+            image = Image.open(image_path)
+            imagee=image.convert('L') #gri tonlama yap
+            # Görüntüyü numpy dizisine dönüştür
+            img_array = np.array(imagee)
+
+            # Sigmoid fonksiyonunu kullanarak piksel değerlerini dönüştür
+            transformed_img = s_curve(img_array, a, b)
+
+            # Piksel değerlerini 0-255 aralığına getir
+            transformed_img = (transformed_img * 255).astype(np.uint8)
+
+            # Dönüştürülmüş görüntüyü göster
+            plt.figure(figsize=(10, 5))
+            plt.subplot(1, 2, 1)
+            plt.imshow(image, cmap='gray')
+            plt.title('Orijinal Görüntü')
+            plt.axis('off')
+
+            plt.subplot(1, 2, 2)
+            plt.imshow(transformed_img, cmap='gray')
+            plt.title('Kontrast Güçlendirilmiş Görüntü')
+            plt.axis('off')
+
+            plt.show()
+
+        # Test etmek için bir görüntü dosyası yolu verin
+        image_path = self.görüntü_yolu  # Kendi dosya yolunuzu girin
+        contrast_enhancement(image_path, a=1, b=0.5)
 
 
 class MainWindow(QMainWindow):
@@ -601,7 +640,7 @@ class MainWindow(QMainWindow):
         action_odev2.triggered.connect(self.open_new_window_odev2)
         toolbar.addAction(action_odev2)
 
-        action_odev3 = QAction("Ödev 3", self)
+        action_odev3 = QAction("Vize Ödevi", self)
         action_odev3.triggered.connect(self.open_new_window_odev3)
         toolbar.addAction(action_odev3)
 
