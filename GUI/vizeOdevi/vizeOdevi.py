@@ -9,7 +9,8 @@ import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
 import numpy as np
-
+import matplotlib.pyplot as plt
+from skimage import io, img_as_float
 
 class ImageLoaderDialog(QDialog):
     def __init__(self, parent=None):
@@ -475,7 +476,7 @@ class ContrastEnhancement:
 
         # Ana pencereyi oluştur
         self.app = tk.Tk()
-        self.app.title("Ödev3")
+        self.app.title("Vize Ödevi-Soru1")
 
         info_text = " Görüntü İşleme Vize Ödevi Soru1: S- Curve Metodu İle Kontrast Güçlendirme İşlemi"
         detail_text = "Seçilen bir görüntü için Standart Sigmoid Fonksiyonu,Yatay Kaydırılmış Sigmoid Fonksiyonu,Eğimli Sigmoid Fonksiyonu,Kendi ürettiğiniz bir fonksiyon kullanarak S- Curve metodu ile kontrast güçlendirme işlemi yapınız. S- curve metodunu  raporunuzda açıklayınız."
@@ -507,6 +508,10 @@ class ContrastEnhancement:
                                          state=tk.DISABLED)
         self.yatay_button.pack(pady=10)
 
+        self.egimli_button = tk.Button(self.app, text="Eğimli  Sigmoid", command=self.egimli_enhance_contrast,
+                                      state=tk.DISABLED)
+        self.egimli_button.pack(pady=10)
+
         # Uygulamayı başlat
         self.app.mainloop()
 
@@ -523,6 +528,7 @@ class ContrastEnhancement:
             #Butonları aktif hale getir
             self.standart_button.config(state=tk.NORMAL)
             self.yatay_button.config(state=tk.NORMAL)
+            self.egimli_button.config(state=tk.NORMAL)
 
 
 
@@ -588,18 +594,57 @@ class ContrastEnhancement:
             plt.subplot(1, 2, 1)
             plt.imshow(image, cmap='gray')
             plt.title('Orijinal Görüntü')
-            plt.axis('off')
 
             plt.subplot(1, 2, 2)
             plt.imshow(transformed_img, cmap='gray')
             plt.title('Kontrast Güçlendirilmiş Görüntü')
-            plt.axis('off')
 
             plt.show()
 
         # Test etmek için bir görüntü dosyası yolu verin
         image_path = self.görüntü_yolu  # Kendi dosya yolunuzu girin
         contrast_enhancement(image_path, a=1, b=0.5)
+
+    def egimli_enhance_contrast(self):
+
+
+        def sigmoid(x, a, b):
+            return 1 / (1 + np.exp(-a * (x - b)))
+
+        def s_curve_contrast_enhancement(image, a=1, b=0.5):
+            # Görüntüyü [0, 1] aralığına normalleştir
+            normalized_image = img_as_float(image)
+
+            # Sigmoid fonksiyonunu görüntüye uygula
+            enhanced_image = sigmoid(normalized_image, a, b)
+
+            # Normalleştirilmiş görüntüyü [0, 1] aralığına dönüştür
+            enhanced_image = (enhanced_image - np.min(enhanced_image)) / (
+                        np.max(enhanced_image) - np.min(enhanced_image))
+
+            return enhanced_image
+
+        def process_image_and_show(file_path, a=1, b=0.5):
+            # Örnek bir görüntüyü yükleme
+            image = io.imread(file_path)
+
+            # Kontrastı güçlendirilmiş görüntüyü oluşturma
+            enhanced_image = s_curve_contrast_enhancement(image, a, b)
+
+            # Görüntüleri gösterme
+            plt.figure(figsize=(10, 5))
+            plt.subplot(1, 2, 1)
+            plt.imshow(image)
+            plt.title('Orijinal Görüntü')
+
+            plt.subplot(1, 2, 2)
+            plt.imshow(enhanced_image, cmap='gray')
+            plt.title('Kontrast Güçlendirilmiş Görüntü')
+
+            plt.show()
+
+
+        process_image_and_show(self.görüntü_yolu)
 
 
 class MainWindow(QMainWindow):
@@ -640,7 +685,7 @@ class MainWindow(QMainWindow):
         action_odev2.triggered.connect(self.open_new_window_odev2)
         toolbar.addAction(action_odev2)
 
-        action_odev3 = QAction("Vize Ödevi", self)
+        action_odev3 = QAction("Vize Ödevi-Soru1", self)
         action_odev3.triggered.connect(self.open_new_window_odev3)
         toolbar.addAction(action_odev3)
 
