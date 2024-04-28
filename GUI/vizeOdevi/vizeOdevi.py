@@ -479,7 +479,9 @@ class ContrastEnhancement:
         self.app.title("Vize Ödevi-Soru1")
 
         info_text = " Görüntü İşleme Vize Ödevi Soru1: S- Curve Metodu İle Kontrast Güçlendirme İşlemi"
-        detail_text = "Seçilen bir görüntü için Standart Sigmoid Fonksiyonu,Yatay Kaydırılmış Sigmoid Fonksiyonu,Eğimli Sigmoid Fonksiyonu,Kendi ürettiğiniz bir fonksiyon kullanarak S- Curve metodu ile kontrast güçlendirme işlemi yapınız. S- curve metodunu  raporunuzda açıklayınız."
+        detail_text = ("Seçilen bir görüntü için Standart Sigmoid Fonksiyonu,Yatay Kaydırılmış Sigmoid Fonksiyonu,Eğimli Sigmoid Fonksiyonu,"
+                       " Kendi ürettiğiniz bir fonksiyon kullanarak S- Curve metodu ile kontrast güçlendirme işlemi yapınız. S- curve metodunu"
+                       "  raporunuzda açıklayınız.")
 
         # Info ve detail metinlerinin bulunduğu bir frame oluştur
         info_frame = tk.Frame(self.app)
@@ -597,7 +599,7 @@ class ContrastEnhancement:
 
             plt.subplot(1, 2, 2)
             plt.imshow(transformed_img, cmap='gray')
-            plt.title('Kontrast Güçlendirilmiş Görüntü')
+            plt.title('Yatay Kaydırılmış Sigmoid Uygulanmış Görüntü')
 
             plt.show()
 
@@ -639,12 +641,103 @@ class ContrastEnhancement:
 
             plt.subplot(1, 2, 2)
             plt.imshow(enhanced_image, cmap='gray')
-            plt.title('Kontrast Güçlendirilmiş Görüntü')
+            plt.title('Eğimli Sigmoid Uygulanmış Görüntü')
 
             plt.show()
 
 
         process_image_and_show(self.görüntü_yolu)
+
+class HoughTransform:
+    def __init__(self):
+
+        self.görüntü_yolu = None
+
+        # Ana pencereyi oluştur
+        self.app = tk.Tk()
+        self.app.title("Vize Ödevi-Soru2")
+
+        info_text = " Görüntü İşleme Vize Ödevi Soru1: S- Curve Metodu İle Kontrast Güçlendirme İşlemi"
+        detail_text = ("Hough Transform kullanarak yoldaki çizgileri tespit eden uygulama ve yüz resminde gözleri tespit eden uygulamayı yapınız.Hough transform metodunu raporunuzda açıklayınız ve sonuçlarını gösteriniz.")
+
+        # Info ve detail metinlerinin bulunduğu bir frame oluştur
+        info_frame = tk.Frame(self.app)
+        info_frame.pack(pady=10)
+
+        # Info metnini ekle
+        info_label = tk.Label(info_frame, text=info_text)
+        info_label.pack()
+
+        # Detail metnini ekle
+        detail_label = tk.Label(info_frame,text=detail_text)
+        detail_label.pack()
+
+        self.seç_button = tk.Button(self.app, text="Dosya Seç", command=self.dosya_seç)
+        self.seç_button.pack(pady=10)
+
+        # Resmi gösteren etiket
+        self.image_label = tk.Label(self.app)
+        self.image_label.pack()
+
+        self.yol_button = tk.Button(self.app, text="Yol Çizgilerini Bul", command=self.road_lines,
+                                        state=tk.DISABLED)
+        self.yol_button.pack(pady=10)
+
+        self.goz_button = tk.Button(self.app, text="Gözleri Bul", command=self.find_eyes,
+                                    state=tk.DISABLED)
+        self.goz_button.pack(pady=10)
+
+
+
+        # Uygulamayı başlat
+        self.app.mainloop()
+
+    def dosya_seç(self):
+        self.görüntü_yolu = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.gif")])
+        if self.görüntü_yolu:
+            # Seçilen dosyayı ekranda göster
+            image = Image.open(self.görüntü_yolu)
+            image.thumbnail((300, 300))  # Resmi küçült
+            tk_image = ImageTk.PhotoImage(image)
+            self.image_label.config(image=tk_image)
+            self.image_label.image = tk_image
+
+            #Butonları aktif hale getir
+            self.yol_button.config(state=tk.NORMAL)
+            self.goz_button.config(state=tk.NORMAL)
+
+
+
+    def road_lines(self):
+        def detect_lines( threshold=50, minLineLength=100, maxLineGap=50):
+            # Görüntüyü yükle
+            image = plt.imread(self.görüntü_yolu)
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+            # Gürültüyü azaltmak için Gaussian Blur uygula
+            blur = cv2.GaussianBlur(gray, (5, 5), 0)
+
+            # Kenarları algıla (Canny Edge Detection)
+            edges = cv2.Canny(blur, 50, 150)
+
+            # Hough Transform'u uygula
+            lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold, minLineLength, maxLineGap)
+
+            # Çizgileri orijinal görüntü üzerine çiz
+            if lines is not None:
+                for line in lines:
+                    x1, y1, x2, y2 = line[0]
+                    cv2.line(image, (x1, y1), (x2, y2), (0, 255, 0), 3)
+
+            # Sonucu göster
+            cv2.imshow('Detected Lines', image)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
+        detect_lines()
+
+    def find_eyes(self):
+        print('a');
 
 
 class MainWindow(QMainWindow):
@@ -689,6 +782,10 @@ class MainWindow(QMainWindow):
         action_odev3.triggered.connect(self.open_new_window_odev3)
         toolbar.addAction(action_odev3)
 
+        action_odev4 = QAction("Vize Ödevi-Soru2", self)
+        action_odev4.triggered.connect(self.open_new_window_odev4)
+        toolbar.addAction(action_odev4)
+
     def open_new_window_odev1(self):
         self.new_window = NewWindow("Ödev 1 ", enable_image_loading=True)
         info_text = "Ödev 1: Temel İşlevselliği Oluştur"
@@ -702,6 +799,10 @@ class MainWindow(QMainWindow):
 
     def open_new_window_odev3(self):
         self.new_window = ContrastEnhancement()
+        self.new_window.app.mainloop()
+
+    def open_new_window_odev4(self):
+        self.new_window = HoughTransform()
         self.new_window.app.mainloop()
 
 
