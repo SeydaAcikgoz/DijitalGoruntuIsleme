@@ -657,8 +657,9 @@ class HoughTransform:
         self.app = tk.Tk()
         self.app.title("Vize Ödevi-Soru2")
 
-        info_text = " Görüntü İşleme Vize Ödevi Soru1: S- Curve Metodu İle Kontrast Güçlendirme İşlemi"
-        detail_text = ("Hough Transform kullanarak yoldaki çizgileri tespit eden uygulama ve yüz resminde gözleri tespit eden uygulamayı yapınız.Hough transform metodunu raporunuzda açıklayınız ve sonuçlarını gösteriniz.")
+        info_text = " Görüntü İşleme Vize Ödevi Soru2: Hough Transform "
+        detail_text = ("Hough Transform kullanarak yoldaki çizgileri tespit eden uygulama ve yüz resminde gözleri tespit "
+                       "\n eden uygulamayı yapınız.Hough transform metodunu raporunuzda açıklayınız ve sonuçlarını gösteriniz.")
 
         # Info ve detail metinlerinin bulunduğu bir frame oluştur
         info_frame = tk.Frame(self.app)
@@ -709,9 +710,8 @@ class HoughTransform:
 
 
     def road_lines(self):
-        def detect_lines( threshold=50, minLineLength=100, maxLineGap=50):
-            # Görüntüyü yükle
-            image = plt.imread(self.görüntü_yolu)
+        def detect_lines( image_path,threshold=50, minLineLength=100, maxLineGap=50):
+            image = io.imread(image_path)
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
             # Gürültüyü azaltmak için Gaussian Blur uygula
@@ -721,7 +721,7 @@ class HoughTransform:
             edges = cv2.Canny(blur, 50, 150)
 
             # Hough Transform'u uygula
-            lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold, minLineLength, maxLineGap)
+            lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=50, minLineLength=100, maxLineGap=50)
 
             # Çizgileri orijinal görüntü üzerine çiz
             if lines is not None:
@@ -734,10 +734,37 @@ class HoughTransform:
             cv2.waitKey(0)
             cv2.destroyAllWindows()
 
-        detect_lines()
+        detect_lines(self.görüntü_yolu)
 
     def find_eyes(self):
-        print('a');
+        def detection_eyes(image_path):
+            # Görüntüyü yükle
+            image = io.imread(image_path)
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+            # Gürültüyü azaltmak için Gaussian Blur uygula
+            blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
+            # Canny kenar tespiti uygula
+            edges = cv2.Canny(blurred, 50, 150)
+
+            # Hough dönüşümü uygula
+            circles = cv2.HoughCircles(edges, cv2.HOUGH_GRADIENT, dp=1, minDist=50, param1=200, param2=30, minRadius=10,
+                                       maxRadius=50)
+
+            # Daireleri çiz
+            if circles is not None:
+                circles = np.round(circles[0, :]).astype("int")
+                for (x, y, r) in circles:
+                    cv2.circle(image, (x, y), r, (0, 255, 0), 4)  # Daireyi çiz
+
+            # Sonuçları göster
+            cv2.imshow("Detected Circles", image)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
+        # Fonksiyonu kullanarak görüntüdeki daireleri tespit et
+        detection_eyes(self.görüntü_yolu)
 
 
 class MainWindow(QMainWindow):
