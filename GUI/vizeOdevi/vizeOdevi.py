@@ -11,6 +11,7 @@ from PIL import Image, ImageTk
 import numpy as np
 import matplotlib.pyplot as plt
 from skimage import io, img_as_float
+import pandas as pd
 
 class ImageLoaderDialog(QDialog):
     def __init__(self, parent=None):
@@ -483,22 +484,18 @@ class ContrastEnhancement:
                        " Kendi ürettiğiniz bir fonksiyon kullanarak S- Curve metodu ile kontrast güçlendirme işlemi yapınız. S- curve metodunu"
                        "  raporunuzda açıklayınız.")
 
-        # Info ve detail metinlerinin bulunduğu bir frame oluştur
         info_frame = tk.Frame(self.app)
         info_frame.pack(pady=10)
 
-        # Info metnini ekle
         info_label = tk.Label(info_frame, text=info_text)
         info_label.pack()
 
-        # Detail metnini ekle
         detail_label = tk.Label(info_frame,text=detail_text)
         detail_label.pack()
 
         self.seç_button = tk.Button(self.app, text="Dosya Seç", command=self.dosya_seç)
         self.seç_button.pack(pady=10)
 
-        # Resmi gösteren etiket
         self.image_label = tk.Label(self.app)
         self.image_label.pack()
 
@@ -514,13 +511,11 @@ class ContrastEnhancement:
                                       state=tk.DISABLED)
         self.egimli_button.pack(pady=10)
 
-        # Uygulamayı başlat
         self.app.mainloop()
 
     def dosya_seç(self):
         self.görüntü_yolu = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.gif")])
         if self.görüntü_yolu:
-            # Seçilen dosyayı ekranda göster
             image = Image.open(self.görüntü_yolu)
             image.thumbnail((300, 300))  # Resmi küçült
             tk_image = ImageTk.PhotoImage(image)
@@ -535,34 +530,29 @@ class ContrastEnhancement:
 
 
     def standart_enhance_contrast(self):
-        # Standart Sigmoid Fonksiyonu tanımı
         def sigmoid(x):
             return 1 / (1 + np.exp(-x))
 
-        # S-Curve metodu kullanarak kontrast güçlendirme fonksiyonu
         def enhance(image):
 
-            # Standart Sigmoid Fonksiyonu için giriş aralığını ayarla
+            # Standart Sigmoid Fonksiyonu için giriş aralığını ayarlanır
             x = np.linspace(0, 1, 256)
 
-            # Standart Sigmoid Fonksiyonu kullanarak S-Curve oluştur
+            # Standart Sigmoid Fonksiyonu kullanarak S-Curve oluşturulur
             s_curve = sigmoid((x - 0.5) * 10)
 
-            # S-Curve'u piksel değerlerine uygula
+            # S-Curve'u piksel değerlerine uygulanır
             enhanced_image = np.interp(image, x, s_curve)
 
-            # Görüntüyü [0, 255] aralığına geri dönüştür
+            # Görüntüyü [0, 255] aralığına geri dönüştürür
             enhanced_image = (enhanced_image * 255).astype(np.uint8)
 
             return enhanced_image
 
-        # Örnek bir gri tonlamalı görüntü yükleme (örneğin)
         image = plt.imread(self.görüntü_yolu)
 
-        # Kontrastı artırılmış görüntüyü oluştur
         enhanced_image = enhance(image)
 
-        # Görüntüleri gösterme
         plt.figure(figsize=(10, 5))
         plt.subplot(1, 2, 1)
         plt.imshow(image, cmap='gray')
@@ -579,19 +569,17 @@ class ContrastEnhancement:
             return 1 / (1 + np.exp(-a * (pixel_val / 255 - b)))
 
         def contrast_enhancement(image_path, a=1, b=0.5):
-            # Görüntüyü yükle
             image = Image.open(image_path)
-            imagee=image.convert('L') #gri tonlama yap
-            # Görüntüyü numpy dizisine dönüştür
+            imagee=image.convert('L') #gri tonlama yapılır
+            # Görüntüyü numpy dizisine dönüştürülür
             img_array = np.array(imagee)
 
-            # Sigmoid fonksiyonunu kullanarak piksel değerlerini dönüştür
+            # Sigmoid fonksiyonunu kullanarak piksel değerlerini dönüştürülür
             transformed_img = s_curve(img_array, a, b)
 
-            # Piksel değerlerini 0-255 aralığına getir
+            # Piksel değerlerini 0-255 aralığına getirilir
             transformed_img = (transformed_img * 255).astype(np.uint8)
 
-            # Dönüştürülmüş görüntüyü göster
             plt.figure(figsize=(10, 5))
             plt.subplot(1, 2, 1)
             plt.imshow(image, cmap='gray')
@@ -603,37 +591,32 @@ class ContrastEnhancement:
 
             plt.show()
 
-        # Test etmek için bir görüntü dosyası yolu verin
-        image_path = self.görüntü_yolu  # Kendi dosya yolunuzu girin
+        image_path = self.görüntü_yolu
         contrast_enhancement(image_path, a=1, b=0.5)
 
     def egimli_enhance_contrast(self):
-
-
         def sigmoid(x, a, b):
             return 1 / (1 + np.exp(-a * (x - b)))
 
         def s_curve_contrast_enhancement(image, a=1, b=0.5):
-            # Görüntüyü [0, 1] aralığına normalleştir
+            # Görüntüyü [0, 1] aralığına normalleştirilir
             normalized_image = img_as_float(image)
 
-            # Sigmoid fonksiyonunu görüntüye uygula
+            # Sigmoid fonksiyonunu görüntüye uygulanır
             enhanced_image = sigmoid(normalized_image, a, b)
 
-            # Normalleştirilmiş görüntüyü [0, 1] aralığına dönüştür
+            # Normalleştirilmiş görüntüyü [0, 1] aralığına dönüştürülür
             enhanced_image = (enhanced_image - np.min(enhanced_image)) / (
                         np.max(enhanced_image) - np.min(enhanced_image))
 
             return enhanced_image
 
         def process_image_and_show(file_path, a=1, b=0.5):
-            # Örnek bir görüntüyü yükleme
             image = io.imread(file_path)
 
             # Kontrastı güçlendirilmiş görüntüyü oluşturma
             enhanced_image = s_curve_contrast_enhancement(image, a, b)
 
-            # Görüntüleri gösterme
             plt.figure(figsize=(10, 5))
             plt.subplot(1, 2, 1)
             plt.imshow(image)
@@ -645,7 +628,6 @@ class ContrastEnhancement:
 
             plt.show()
 
-
         process_image_and_show(self.görüntü_yolu)
 
 class HoughTransform:
@@ -653,7 +635,6 @@ class HoughTransform:
 
         self.görüntü_yolu = None
 
-        # Ana pencereyi oluştur
         self.app = tk.Tk()
         self.app.title("Vize Ödevi-Soru2")
 
@@ -661,22 +642,18 @@ class HoughTransform:
         detail_text = ("Hough Transform kullanarak yoldaki çizgileri tespit eden uygulama ve yüz resminde gözleri tespit "
                        "\n eden uygulamayı yapınız.Hough transform metodunu raporunuzda açıklayınız ve sonuçlarını gösteriniz.")
 
-        # Info ve detail metinlerinin bulunduğu bir frame oluştur
         info_frame = tk.Frame(self.app)
         info_frame.pack(pady=10)
 
-        # Info metnini ekle
         info_label = tk.Label(info_frame, text=info_text)
         info_label.pack()
 
-        # Detail metnini ekle
         detail_label = tk.Label(info_frame,text=detail_text)
         detail_label.pack()
 
         self.seç_button = tk.Button(self.app, text="Dosya Seç", command=self.dosya_seç)
         self.seç_button.pack(pady=10)
 
-        # Resmi gösteren etiket
         self.image_label = tk.Label(self.app)
         self.image_label.pack()
 
@@ -688,48 +665,40 @@ class HoughTransform:
                                     state=tk.DISABLED)
         self.goz_button.pack(pady=10)
 
-
-
-        # Uygulamayı başlat
         self.app.mainloop()
 
     def dosya_seç(self):
         self.görüntü_yolu = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.gif")])
         if self.görüntü_yolu:
-            # Seçilen dosyayı ekranda göster
             image = Image.open(self.görüntü_yolu)
-            image.thumbnail((300, 300))  # Resmi küçült
+            image.thumbnail((300, 300))
             tk_image = ImageTk.PhotoImage(image)
             self.image_label.config(image=tk_image)
             self.image_label.image = tk_image
 
-            #Butonları aktif hale getir
             self.yol_button.config(state=tk.NORMAL)
             self.goz_button.config(state=tk.NORMAL)
-
-
 
     def road_lines(self):
         def detect_lines( image_path,threshold=50, minLineLength=100, maxLineGap=50):
             image = io.imread(image_path)
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-            # Gürültüyü azaltmak için Gaussian Blur uygula
+            # Gürültüyü azaltmak için Gaussian Blur uygulanır
             blur = cv2.GaussianBlur(gray, (5, 5), 0)
 
-            # Kenarları algıla (Canny Edge Detection)
+            # Kenarları Canny Edge Detection ile algılanır
             edges = cv2.Canny(blur, 50, 150)
 
-            # Hough Transform'u uygula
+            # Hough Transform'u uygulanır
             lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=50, minLineLength=100, maxLineGap=50)
 
-            # Çizgileri orijinal görüntü üzerine çiz
+            # Çizgileri orijinal görüntü üzerine çizilir
             if lines is not None:
                 for line in lines:
                     x1, y1, x2, y2 = line[0]
                     cv2.line(image, (x1, y1), (x2, y2), (0, 255, 0), 3)
 
-            # Sonucu göster
             cv2.imshow('Detected Lines', image)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
@@ -738,34 +707,213 @@ class HoughTransform:
 
     def find_eyes(self):
         def detection_eyes(image_path):
-            # Görüntüyü yükle
             image = io.imread(image_path)
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-            # Gürültüyü azaltmak için Gaussian Blur uygula
+            # Gürültüyü azaltmak için Gaussian Blur uygulanır
             blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 
-            # Canny kenar tespiti uygula
+            # Kenarları Canny Edge Detection ile algılanır
             edges = cv2.Canny(blurred, 50, 150)
 
-            # Hough dönüşümü uygula
+            # Hough dönüşümü uygulanır
             circles = cv2.HoughCircles(edges, cv2.HOUGH_GRADIENT, dp=1, minDist=50, param1=200, param2=30, minRadius=10,
                                        maxRadius=50)
 
-            # Daireleri çiz
+            # Daireleri çizilir
             if circles is not None:
                 circles = np.round(circles[0, :]).astype("int")
                 for (x, y, r) in circles:
-                    cv2.circle(image, (x, y), r, (0, 255, 0), 4)  # Daireyi çiz
+                    cv2.circle(image, (x, y), r, (0, 255, 0), 4)
 
-            # Sonuçları göster
             cv2.imshow("Detected Circles", image)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
 
-        # Fonksiyonu kullanarak görüntüdeki daireleri tespit et
         detection_eyes(self.görüntü_yolu)
 
+class Debluring:
+    def __init__(self):
+        self.görüntü_yolu = None
+
+        self.app = tk.Tk()
+        self.app.title("Vize Ödevi-Soru3")
+
+        info_text = " Görüntü İşleme Vize Ödevi Soru3: Deblurring Algoritması Geliştirme "
+        detail_text = ("Bu görevde, herhangi bir sınırlama olmadan, tamamen kendinizin geliştireceği bir deblurring algoritması ile hareketli"
+                       " bir görüntüdeki motion blur bozulmasını düzeltiniz. Ve raporunuzda, akış diyagramını, önce ve sonra görüntülerini ekleyiniz")
+
+        info_frame = tk.Frame(self.app)
+        info_frame.pack(pady=10)
+
+        info_label = tk.Label(info_frame, text=info_text)
+        info_label.pack()
+
+        detail_label = tk.Label(info_frame,text=detail_text)
+        detail_label.pack()
+
+        self.seç_button = tk.Button(self.app, text="Dosya Seç", command=self.dosya_seç)
+        self.seç_button.pack(pady=10)
+
+        self.image_label = tk.Label(self.app)
+        self.image_label.pack()
+
+        self.deblur_button = tk.Button(self.app, text="Deblur", command=self.deblur_algorithm,
+                                        state=tk.DISABLED)
+        self.deblur_button.pack(pady=10)
+
+        self.app.mainloop()
+
+    def dosya_seç(self):
+        self.görüntü_yolu = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.gif")])
+        if self.görüntü_yolu:
+            image = Image.open(self.görüntü_yolu)
+            image.thumbnail((300, 300))
+            tk_image = ImageTk.PhotoImage(image)
+            self.image_label.config(image=tk_image)
+            self.image_label.image = tk_image
+
+            self.deblur_button.config(state=tk.NORMAL)
+
+    def deblur_algorithm(self):
+        def process_image(image_path, operations=None):
+            image = cv2.imread(image_path)
+            height, width = image.shape[0], image.shape[1]
+
+            if operations is None:
+                operations = ["convert_to_grayscale", "netlestir"]
+
+            for operation in operations:
+                if operation == "convert_to_grayscale":
+                    for y in range(height):
+                        for x in range(width):
+                            b, g, r = image[y, x]
+                            s = sum((b, g, r)) // 3
+                            image[y, x] = s, s, s
+
+                elif operation == "netlestir":
+                    for y in range(height):
+                        for x in range(width):
+                            try:
+                                b, g, r = image[y, x]
+                                if b <= 125 and g <= 125 and r <= 125:
+                                    image[y, x] = (0, 0, 0)
+                            except IndexError:
+                                continue
+
+            cv2.imshow("Deblurred Image", image)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
+        process_image("blurred.png")
+
+
+class CountingObjectsAndExtractingFeatures:
+    def __init__(self):
+        self.görüntü_yolu = None
+
+        self.app = tk.Tk()
+        self.app.title("Vize Ödevi-Soru4")
+
+        info_text = " Görüntü İşleme Vize Ödevi Soru4: Resimdeki Nesneleri Sayma ve Özellik Çıkarma "
+        detail_text = ("Ekte verilen görsel, bir tarladan drone ile çekilmiş hiperspektral görüntünün RGB’ye indirgenmiş halidir."
+                       "\n  Resimdeki “koyu yeşil” bölgeleri tespit edip bir excel tablosu oluşturacak kodu yazınız")
+
+        info_frame = tk.Frame(self.app)
+        info_frame.pack(pady=10)
+
+        info_label = tk.Label(info_frame, text=info_text)
+        info_label.pack()
+
+        detail_label = tk.Label(info_frame,text=detail_text)
+        detail_label.pack()
+
+        self.seç_button = tk.Button(self.app, text="Resmi Yerleştir", command=self.dosya_seç)
+        self.seç_button.pack(pady=10)
+
+        self.image_label = tk.Label(self.app)
+        self.image_label.pack()
+
+        self.excel_button = tk.Button(self.app, text="Excel i Oluştur", command=self.createToExcel,
+                                        state=tk.DISABLED)
+        self.excel_button.pack(pady=10)
+
+        self.app.mainloop()
+
+    def dosya_seç(self):
+        self.görüntü_yolu = "say.jpg"
+        if self.görüntü_yolu:
+            image = Image.open(self.görüntü_yolu)
+            image.thumbnail((300, 300))
+            tk_image = ImageTk.PhotoImage(image)
+            self.image_label.config(image=tk_image)
+            self.image_label.image = tk_image
+
+            self.excel_button.config(state=tk.NORMAL)
+
+    def createToExcel(self):
+        def koyu_yesil_bolgeleri_isle(goruntu_dosyasi, excel_dosyasi):
+            hiperspektral_resim = cv2.imread(goruntu_dosyasi)
+            hiperspektral_resim_rgb = cv2.cvtColor(hiperspektral_resim, cv2.COLOR_BGR2RGB)
+
+            # Koyu yeşil bölgeleri tespit etmek için eşik değerleri belirlenir
+            lower_green = np.array([0, 100, 0], dtype="uint8")
+            upper_green = np.array([50, 255, 50], dtype="uint8")
+
+            # Eşikleme işlemi uygulanır
+            mask = cv2.inRange(hiperspektral_resim_rgb, lower_green, upper_green)
+
+            # Koyu yeşil bölgelerin konturunu bulunur
+            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+            #Belirlenen bölgelerin resim olarak görülebilmesi için boş resim oluşturulur
+            contour_image = np.zeros_like(hiperspektral_resim)
+
+            #Belirlenen bölgelerin resim olarak görülebilmesi için konturlar bu görüntünün üzerine çizilir
+            cv2.drawContours(contour_image, contours, -1, (0, 255, 0), 3)
+            cv2.imshow('Islem Sonucu Olusan Goruntu', contour_image)
+            cv2.waitKey(0)
+            cv2.imwrite('koyu_yesil_bolgeler.jpg', contour_image)
+
+            # Özellik çıkarmak için boş bir liste oluşturulur
+            veri_listesi = []
+
+            # Konturlar işlenir
+            for i, contour in enumerate(contours):
+                # Konturun alanı hesaplanır
+                alan = cv2.contourArea(contour)
+
+                # Konturun merkezi ve dış dikdörtgenin koordinatları bulunur
+                M = cv2.moments(contour)
+
+                if M["m00"] != 0:
+                    cx = int(M["m10"] / M["m00"])
+                    cy = int(M["m01"] / M["m00"])
+                    x, y, w, h = cv2.boundingRect(contour)
+                    # Diagonal hesaplanır
+                    diagonal = np.sqrt(w ** 2 + h ** 2)
+                    # Energy ve Entropy hesaplanır
+                    mask_kontur = np.zeros_like(mask)
+                    cv2.drawContours(mask_kontur, [contour], -1, 255, -1)
+                    moments = cv2.moments(mask_kontur)
+                    hu_moments = cv2.HuMoments(moments).flatten()
+                    energy = np.sum(hu_moments[1:] ** 2)
+                    entropy = -np.sum(hu_moments * np.log(np.abs(hu_moments) + 1e-10))
+                    # Mean ve Median hesaplanır
+                    mean_val = np.mean(hiperspektral_resim_rgb[mask_kontur == 255])
+                    median_val = np.median(hiperspektral_resim_rgb[mask_kontur == 255])
+                    # Verileri liste içine eklenir
+                    veri_listesi.append({'No': i + 1, 'Center': (cx, cy), 'Length': f"{w} px", 'Width': f"{h} px",
+                                         'Diagonal': f"{diagonal} px",
+                                         'Energy': energy, 'Entropy': entropy, 'Mean': mean_val, 'Median': median_val})
+
+            # Listeyi DataFrame'e dönüştürülür
+            excel_tablosu = pd.DataFrame(veri_listesi)
+
+            # Veriler Excel'e aktarılır
+            excel_tablosu.to_excel(excel_dosyasi, index=False)
+
+        koyu_yesil_bolgeleri_isle('say.jpg', 'koyu_yesil_bolgeler.xlsx')
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -813,6 +961,14 @@ class MainWindow(QMainWindow):
         action_odev4.triggered.connect(self.open_new_window_odev4)
         toolbar.addAction(action_odev4)
 
+        action_odev5 = QAction("Vize Ödevi-Soru3", self)
+        action_odev5.triggered.connect(self.open_new_window_odev5)
+        toolbar.addAction(action_odev5)
+
+        action_odev6 = QAction("Vize Ödevi-Soru4", self)
+        action_odev6.triggered.connect(self.open_new_window_odev6)
+        toolbar.addAction(action_odev6)
+
     def open_new_window_odev1(self):
         self.new_window = NewWindow("Ödev 1 ", enable_image_loading=True)
         info_text = "Ödev 1: Temel İşlevselliği Oluştur"
@@ -830,6 +986,14 @@ class MainWindow(QMainWindow):
 
     def open_new_window_odev4(self):
         self.new_window = HoughTransform()
+        self.new_window.app.mainloop()
+
+    def open_new_window_odev5(self):
+        self.new_window = Debluring()
+        self.new_window.app.mainloop()
+
+    def open_new_window_odev6(self):
+        self.new_window = CountingObjectsAndExtractingFeatures()
         self.new_window.app.mainloop()
 
 
